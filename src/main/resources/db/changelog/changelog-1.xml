@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<changeSet id="1" author="assistant">
+    <createTable tableName="app_user">
+        <column name="id" type="SERIAL">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="first_name" type="VARCHAR(100)"/>
+        <column name="last_name" type="VARCHAR(100)"/>
+        <column name="birth_date" type="DATE"/>
+        <column name="gender" type="VARCHAR(10)"/>
+        <column name="interests" type="TEXT"/>
+        <column name="city" type="VARCHAR(100)"/>
+        <column name="password_hash" type="VARCHAR(255)"/>
+    </createTable>
+</changeSet>

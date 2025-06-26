@@ -1,0 +1,83 @@
+{
+  "info": {
+    "name": "Social Network API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-01-01\",\"gender\":\"MALE\",\"interests\":\"Coding, Music\",\"city\":\"Brussels\",\"passwordHash\":\"secret\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/user/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "user",
+            "register"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "http://localhost:8080/login?id=1&password=secret",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ],
+          "query": [
+            { "key": "id", "value": "1" },
+            { "key": "password", "value": "secret" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get User",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "1" },
+            { "key": "password", "value": "secret" }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/user/get/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "user",
+            "get",
+            "1"
+          ]
+        }
+      }
+    }
+  ]
+}
