@@ -1,5 +1,6 @@
 package com.werdnx.otus.socialnetwork.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,9 @@ public class User {
     private String gender;
     private String interests;
     private String city;
+    @JsonIgnore
     private String passwordHash;
+
 
 
 }

@@ -5,6 +5,8 @@ import com.werdnx.otus.socialnetwork.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     private final UserRepository repo;
@@ -22,9 +24,9 @@ public class UserService {
         return user.getId();
     }
 
-    public boolean validateCredentials(Long id, String rawPassword) {
+    public Optional<User> validateCredentials(Long id, String rawPassword) {
         User u = repo.findById(id);
-        return encoder.matches(rawPassword, u.getPasswordHash());
+        return encoder.matches(rawPassword, u.getPasswordHash()) ? Optional.of(u) : Optional.empty();
     }
 
     public User get(Long id) {

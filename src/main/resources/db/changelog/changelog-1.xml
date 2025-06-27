@@ -19,4 +19,17 @@
             <column name="password_hash" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
+    <!-- 2. Вставка пользователя по-умолчанию -->
+    <changeSet id="20250628-2-insert-default-user" author="werdnx">
+        <insert tableName="users">
+            <column name="id"           valueNumeric="1"/>
+            <column name="first_name"   value="Default"/>
+            <column name="last_name"    value="User"/>
+            <column name="birth_date"   valueDate="1990-01-01"/>
+            <column name="gender"       value="OTHER"/>
+            <column name="interests"    value="[]"/>
+            <column name="city"         value="Moscow"/>
+            <column name="password_hash" value="$2a$10$TdoGyXofN6swWEE2X7TZFej8BJmljLnVzJlllb9vTtKVTkDFZOopy"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

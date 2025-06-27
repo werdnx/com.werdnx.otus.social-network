@@ -1,22 +1,22 @@
 package com.werdnx.otus.socialnetwork.controller;
 
 import com.werdnx.otus.socialnetwork.dto.AuthResponse;
+import com.werdnx.otus.socialnetwork.model.User;
 import com.werdnx.otus.socialnetwork.secutiry.JwtTokenProvider;
 import com.werdnx.otus.socialnetwork.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 public class AuthController {
-    private final AuthenticationManager authManager;
+    private final UserService userService;
     private final JwtTokenProvider jwtProvider;
 
-    public AuthController(AuthenticationManager authManager,
+    public AuthController(UserService userService,
                           JwtTokenProvider jwtProvider) {
-        this.authManager = authManager;
+        this.userService = userService;
         this.jwtProvider = jwtProvider;
     }
 
@@ -25,19 +25,21 @@ public class AuthController {
             @RequestParam Long id,
             @RequestParam String password
     ) {
-        Authentication auth = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(id, password)
-        );
-        String accessToken = jwtProvider.createAccessToken(auth.getName());
-        String refreshToken = jwtProvider.createRefreshToken(auth.getName());
+        Optional<User> user = userService.validateCredentials(id, password);
+        if (user.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        } else {
+            String accessToken = jwtProvider.createAccessToken(user.get().getId().toString());
+            String refreshToken = jwtProvider.createRefreshToken(user.get().getId().toString());
 
-        AuthResponse resp = new AuthResponse(
-                accessToken,
-                jwtProvider.getAccessTokenValiditySeconds(),
-                refreshToken,
-                "Bearer"
-        );
-        return ResponseEntity.ok(resp);
+            AuthResponse resp = new AuthResponse(
+                    accessToken,
+                    jwtProvider.getAccessTokenValiditySeconds(),
+                    refreshToken,
+                    "Bearer"
+            );
+            return ResponseEntity.ok(resp);
+        }
     }
 
     @PostMapping("/auth/refresh")

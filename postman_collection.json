@@ -1,7 +1,9 @@
 {
   "info": {
+    "_postman_id": "fac984ac-437f-4794-bec5-c2d12fcaa1d6",
     "name": "Social Network API - Full User Fields",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "7895871"
   },
   "item": [
     {
@@ -30,7 +32,8 @@
             "register"
           ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "Login User",
@@ -58,11 +61,27 @@
             }
           ]
         }
-      }
+      },
+      "response": []
     },
     {
       "name": "Get User Profile",
       "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "password",
+              "value": "secret",
+              "type": "string"
+            },
+            {
+              "key": "username",
+              "value": "1",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [
           {
@@ -83,7 +102,8 @@
             "1"
           ]
         }
-      }
+      },
+      "response": []
     }
   ]
 }
