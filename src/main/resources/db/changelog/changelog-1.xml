@@ -5,7 +5,7 @@
         xsi:schemaLocation="
       http://www.liquibase.org/xml/ns/dbchangelog
       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet id="1" author="assistant">
+    <changeSet id="1" author="werdnx">
         <createTable tableName="app_user">
             <column name="id" type="SERIAL">
                 <constraints primaryKey="true" nullable="false"/>
@@ -21,7 +21,7 @@
     </changeSet>
     <!-- 2. Вставка пользователя по-умолчанию -->
     <changeSet id="20250628-2-insert-default-user" author="werdnx">
-        <insert tableName="users">
+        <insert tableName="app_user">
             <column name="id"           valueNumeric="1"/>
             <column name="first_name"   value="Default"/>
             <column name="last_name"    value="User"/>

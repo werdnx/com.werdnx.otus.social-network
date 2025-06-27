@@ -18,9 +18,19 @@ public class User {
     private String gender;
     private String interests;
     private String city;
-    @JsonIgnore
     private String passwordHash;
 
 
-
+    @Override
+    public String toString() {
+        return "User{" +
+                "city='" + city + '\'' +
+                ", interests='" + interests + '\'' +
+                ", gender='" + gender + '\'' +
+                ", birthDate=" + birthDate +
+                ", lastName='" + lastName + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }
