@@ -10,3 +10,13 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 server:
   port: 8080
+security:
+  user:
+    name: dummy     # отключим default-user позже
+    password: dummy
+
+jwt:
+  secret: verySecretKeyReallySecretISwearYou
+  access-token-validity-seconds: 900    # 15 минут
+  refresh-token-validity-seconds: 604800  # 7 дней
+
