@@ -1,0 +1,21 @@
+docker build -t social-network-db db/
+
+
+docker run -d \
+  --name social-network-db \
+  -e POSTGRES_DB=socialdb \
+  -e POSTGRES_USER=socialuser \
+  -e POSTGRES_PASSWORD=socialpass \
+  -v socialdb-data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  social-network-db
+
+
+  docker run -d `
+    --name social-network-db `
+    -e POSTGRES_DB=socialdb `
+    -e POSTGRES_USER=socialuser `
+    -e POSTGRES_PASSWORD=socialpass `
+    -v socialdb-data:/var/lib/postgresql/data `
+    -p 5432:5432 `
+    social-network-db

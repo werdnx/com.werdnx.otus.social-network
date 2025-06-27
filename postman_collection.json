@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Social Network API",
+    "name": "Social Network API - Full User Fields",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -16,7 +16,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-01-01\",\"gender\":\"MALE\",\"interests\":\"Coding, Music\",\"city\":\"Brussels\",\"passwordHash\":\"secret\"}"
+          "raw": "{\n \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"birthDate\": \"1990-01-01\",\n  \"gender\": \"MALE\",\n  \"interests\": \"Coding, Music\",\n  \"city\": \"Brussels\",\n  \"passwordHash\": \"secret\"\n}"
         },
         "url": {
           "raw": "http://localhost:8080/user/register",
@@ -33,9 +33,10 @@
       }
     },
     {
-      "name": "Login",
+      "name": "Login User",
       "request": {
         "method": "POST",
+        "header": [],
         "url": {
           "raw": "http://localhost:8080/login?id=1&password=secret",
           "protocol": "http",
@@ -47,23 +48,28 @@
             "login"
           ],
           "query": [
-            { "key": "id", "value": "1" },
-            { "key": "password", "value": "secret" }
+            {
+              "key": "id",
+              "value": "1"
+            },
+            {
+              "key": "password",
+              "value": "secret"
+            }
           ]
         }
       }
     },
     {
-      "name": "Get User",
+      "name": "Get User Profile",
       "request": {
         "method": "GET",
-        "auth": {
-          "type": "basic",
-          "basic": [
-            { "key": "username", "value": "1" },
-            { "key": "password", "value": "secret" }
-          ]
-        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
         "url": {
           "raw": "http://localhost:8080/user/get/1",
           "protocol": "http",
