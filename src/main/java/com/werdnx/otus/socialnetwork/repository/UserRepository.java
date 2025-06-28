@@ -2,11 +2,13 @@ package com.werdnx.otus.socialnetwork.repository;
 
 import com.werdnx.otus.socialnetwork.model.User;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 @Repository
 public class UserRepository {
@@ -22,16 +24,30 @@ public class UserRepository {
 
     public User findById(Long id) {
         return jdbc.queryForObject(
-            "SELECT id, first_name, last_name, birth_date, gender, interests, city, password_hash FROM app_user WHERE id = ?",
-            new UserMapper(), id);
+                "SELECT id, first_name, last_name, birth_date, gender, interests, city, password_hash FROM app_user WHERE id = ?",
+                new UserMapper(), id);
     }
 
-    public void save(User user) {
-        jdbc.update(
-            "INSERT INTO app_user (first_name, last_name, birth_date, gender, interests, city, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            user.getFirstName(), user.getLastName(), user.getBirthDate(), user.getGender(),
-            user.getInterests(), user.getCity(), user.getPasswordHash()
-        );
+    public Long save(User user) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update((PreparedStatementCreator) conn -> {
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO app_user (first_name, last_name, birth_date, gender, interests, city, password_hash) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    new String[]{"id"}
+            );
+            ps.setString(1, user.getFirstName());
+            ps.setString(2, user.getLastName());
+            ps.setDate(3, Date.valueOf(user.getBirthDate()));
+            ps.setString(4, user.getGender());
+            ps.setString(5, user.getInterests());
+            ps.setString(6, user.getCity());
+            ps.setString(7, user.getPasswordHash());
+            return ps;
+        }, keyHolder);
+
+        Number generatedId = keyHolder.getKey();
+        return (generatedId != null ? generatedId.longValue() : null);
     }
 
     static class UserMapper implements RowMapper<User> {

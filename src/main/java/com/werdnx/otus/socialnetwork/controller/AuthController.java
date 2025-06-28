@@ -4,11 +4,13 @@ import com.werdnx.otus.socialnetwork.dto.AuthResponse;
 import com.werdnx.otus.socialnetwork.model.User;
 import com.werdnx.otus.socialnetwork.secutiry.JwtTokenProvider;
 import com.werdnx.otus.socialnetwork.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@Slf4j
 @RestController
 public class AuthController {
     private final UserService userService;
@@ -38,6 +40,7 @@ public class AuthController {
                     refreshToken,
                     "Bearer"
             );
+            log.info("Authorized user {}", id);
             return ResponseEntity.ok(resp);
         }
     }

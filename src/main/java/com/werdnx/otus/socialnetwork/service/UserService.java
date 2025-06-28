@@ -19,9 +19,7 @@ public class UserService {
 
     public Long register(User user) {
         user.setPasswordHash(encoder.encode(user.getPasswordHash()));
-        repo.save(user);
-        // Retrieve ID based on business logic if needed
-        return user.getId();
+        return repo.save(user);
     }
 
     public Optional<User> validateCredentials(Long id, String rawPassword) {
