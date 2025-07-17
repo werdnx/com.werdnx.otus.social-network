@@ -1,0 +1,15 @@
+# 1) Создать папку для результатов
+mkdir -p results report
+
+# 2) Запустить JMeter в non-GUI, собрать HTML-дашборд
+jmeter \
+  -n \
+  -t test-search.jmx \
+  -l results/loadtest.jtl \
+  -e \
+  -o report \
+  -Jhost=localhost \
+  -Jport=8080
+
+# 3) Открыть отчёт в браузере
+report/index.html
