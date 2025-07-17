@@ -1,13 +1,17 @@
 version: '3.8'
 services:
   db:
-    image: postgres:15
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    image: otus-social-db
     environment:
       POSTGRES_DB: socialdb
       POSTGRES_USER: socialuser
       POSTGRES_PASSWORD: socialpass
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/data:/data
     ports:
       - "5432:5432"
 

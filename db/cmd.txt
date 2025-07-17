@@ -19,3 +19,23 @@ docker run -d \
     -v socialdb-data:/var/lib/postgresql/data `
     -p 5432:5432 `
     social-network-db
+
+
+//init data
+docker-compose exec db psql -U socialuser -d socialdb -c "
+  CREATE TEMP TABLE tmp_people(
+    fullname    text,
+    birth_date  date,
+    city        text
+  );
+  COPY tmp_people
+    FROM PROGRAM 'unzip -p /data/people.v2.zip'
+    WITH (FORMAT csv, HEADER true);
+  INSERT INTO app_user(first_name, last_name, birth_date, city)
+    SELECT
+      split_part(fullname,' ',2) AS first_name,
+      split_part(fullname,' ',1) AS last_name,
+      birth_date,
+      city
+    FROM tmp_people;
+"
