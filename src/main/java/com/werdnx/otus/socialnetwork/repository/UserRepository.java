@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.util.List;
 
 @Repository
 public class UserRepository {
@@ -48,6 +49,22 @@ public class UserRepository {
 
         Number generatedId = keyHolder.getKey();
         return (generatedId != null ? generatedId.longValue() : null);
+    }
+
+    /**
+     * Ищет всех пользователей, у которых first_name LIKE ?% AND last_name LIKE ?%, сортирует по id.
+     */
+    public List<User> searchByNamePrefixes(String firstNamePrefix, String lastNamePrefix) {
+        String sql =
+                "SELECT id, first_name, last_name, birth_date, gender, interests, city, password_hash " +
+                        "  FROM app_user " +
+                        " WHERE first_name LIKE ? " +
+                        "   AND last_name  LIKE ? " +
+                        " ORDER BY id";
+        // добавляем знак '%' к префиксам
+        String f = firstNamePrefix + "%";
+        String l = lastNamePrefix + "%";
+        return jdbc.query(sql, new UserMapper(), f, l);
     }
 
     static class UserMapper implements RowMapper<User> {

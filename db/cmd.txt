@@ -30,7 +30,7 @@ docker-compose exec db psql -U socialuser -d socialdb -c "
   );
   COPY tmp_people
     FROM PROGRAM 'unzip -p /data/people.v2.zip'
-    WITH (FORMAT csv, HEADER true);
+    WITH (FORMAT csv, HEADER false);
   INSERT INTO app_user(first_name, last_name, birth_date, city)
     SELECT
       split_part(fullname,' ',2) AS first_name,
