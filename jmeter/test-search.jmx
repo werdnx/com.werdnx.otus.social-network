@@ -92,7 +92,7 @@
           <stringProp name="HTTPSampler.domain">${__P(host)}</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&lastName=Do</stringProp>
+          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&amp;lastName=Do</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
@@ -124,7 +124,7 @@
           <stringProp name="HTTPSampler.domain">${__P(host)}</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&lastName=Do</stringProp>
+          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&amp;lastName=Do</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
@@ -156,7 +156,7 @@
           <stringProp name="HTTPSampler.domain">${__P(host)}</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&lastName=Do</stringProp>
+          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&amp;lastName=Do</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
@@ -188,7 +188,7 @@
           <stringProp name="HTTPSampler.domain">${__P(host)}</stringProp>
           <stringProp name="HTTPSampler.port">${__P(port)}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&lastName=Do</stringProp>
+          <stringProp name="HTTPSampler.path">/user/search?firstName=Ja&amp;lastName=Do</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
@@ -197,18 +197,21 @@
         <hashTree/>
       </hashTree>
 
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
-        <stringProp name="filename">results/summary.csv</stringProp>
-      </ResultCollector>
-      <hashTree/>
-      <ResultCollector guiclass="AggregateReport" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
-        <stringProp name="filename">results/aggregate.csv</stringProp>
-      </ResultCollector>
-      <hashTree/>
-      <ResultCollector guiclass="GraphResults" testclass="ResultCollector" testname="Graph Results" enabled="true">
-        <stringProp name="filename">results/graph.jtl</stringProp>
-      </ResultCollector>
-      <hashTree/>
+  <ResultCollector
+      guiclass="org.apache.jmeter.visualizers.SimpleDataWriter"
+      testclass="org.apache.jmeter.visualizers.SimpleDataWriter"
+      testname="Simple Data Writer" enabled="true">
+    <stringProp name="filename">results/results.csv</stringProp>
+  </ResultCollector>
+  <hashTree/>
+  <!-- Визуализатор результатов (таблица + график) -->
+  <ResultCollector
+      guiclass="org.apache.jmeter.visualizers.ViewResultsFullVisualizer"
+      testclass="org.apache.jmeter.visualizers.ViewResultsFullVisualizer"
+      testname="View Results Tree" enabled="true">
+    <stringProp name="filename">results/results.jtl</stringProp>
+  </ResultCollector>
+  <hashTree/>
     </hashTree>
   </hashTree>
 </jmeterTestPlan>
