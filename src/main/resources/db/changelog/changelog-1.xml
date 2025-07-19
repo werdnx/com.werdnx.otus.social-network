@@ -32,4 +32,15 @@
             <column name="password_hash" value="$2a$10$TdoGyXofN6swWEE2X7TZFej8BJmljLnVzJlllb9vTtKVTkDFZOopy"/>
         </insert>
     </changeSet>
+    <changeSet id="add-idx_app_user_first_last_id" author="werdnx">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_app_user_first_last_id"/>
+            </not>
+        </preConditions>
+        <sql>
+            CREATE INDEX idx_app_user_first_last_id
+            ON app_user(first_name text_pattern_ops, last_name text_pattern_ops, id);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

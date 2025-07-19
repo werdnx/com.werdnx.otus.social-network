@@ -2,23 +2,23 @@ docker build -t social-network-db db/
 
 
 docker run -d \
-  --name social-network-db \
+  --name otus-social-db \
   -e POSTGRES_DB=socialdb \
   -e POSTGRES_USER=socialuser \
   -e POSTGRES_PASSWORD=socialpass \
   -v socialdb-data:/var/lib/postgresql/data \
   -p 5432:5432 \
-  social-network-db
+  otus-social-db
 
 
   docker run -d `
-    --name social-network-db `
+    --name otus-social-db `
     -e POSTGRES_DB=socialdb `
     -e POSTGRES_USER=socialuser `
     -e POSTGRES_PASSWORD=socialpass `
     -v socialdb-data:/var/lib/postgresql/data `
     -p 5432:5432 `
-    social-network-db
+    otus-social-db
 
 
 //init data
