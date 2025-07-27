@@ -28,32 +28,33 @@ public class DataSourceConfig {
         return routing;
     }
 
-    @Bean
+    @Bean("masterDataSource")
     public DataSource masterDataSource(
-            DataSourceProperties propsMaster) {
-        // По-умолчанию initializeDataSourceBuilder() вернёт HikariDataSource
-        return propsMaster.initializeDataSourceBuilder()
+            @Qualifier("masterProps") DataSourceProperties props) {
+        return props
+                .initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
     }
 
-    @Bean
+    @Bean("slaveDataSource")
     public DataSource slaveDataSource(
-            @Qualifier("slave") DataSourceProperties propsSlave) {
-        return propsSlave.initializeDataSourceBuilder()
+            @Qualifier("slaveProps") DataSourceProperties props) {
+        return props
+                .initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
     }
 
-    @Bean
+    @Bean("masterProps")
     @ConfigurationProperties("spring.datasource.master")
-    public DataSourceProperties propsMaster() {
+    public DataSourceProperties masterProperties() {
         return new DataSourceProperties();
     }
 
-    @Bean
+    @Bean("slaveProps")
     @ConfigurationProperties("spring.datasource.slave")
-    public DataSourceProperties propsSlave() {
+    public DataSourceProperties slaveProperties() {
         return new DataSourceProperties();
     }
 }

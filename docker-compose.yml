@@ -11,14 +11,17 @@ services:
     environment:
       POSTGRES_USER: otus
       POSTGRES_PASSWORD: otus_pass
-      POSTGRES_DB: social_network
+      POSTGRES_DB: social_network_rep
     volumes:
       - master_data:/var/lib/postgresql/data
       - ./postgres/master/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - ./postgres/master/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./postgres/master/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     ports:
       - "5432:5432"
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    command: >
+        postgres
+          -c config_file=/etc/postgresql/postgresql.conf
+          -c hba_file=/etc/postgresql/pg_hba.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -76,7 +79,7 @@ services:
       PGPASSWORD: otus_pass
     volumes:
       - slave2_data:/var/lib/postgresql/data
-      - ./postgres/slave2/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/slave1/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     ports:
       - "5434:5432"
     entrypoint:
@@ -103,11 +106,35 @@ services:
     container_name: pg-exporter
     restart: always
     environment:
-      DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-master:5432/social_network?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-master:5432/social_network_rep?sslmode=disable"
     ports:
       - "9187:9187"
     depends_on:
       - postgres-master
+
+  pg-exporter-slave1:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: pg-exporter-slave1
+    restart: always
+    environment:
+      # нацеливаемся на первого слейва
+      DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-slave1:5432/social_network_rep?sslmode=disable"
+    ports:
+      - "9188:9187"     # внешний 9188 → в контейнере 9187
+    depends_on:
+      - postgres-slave1
+
+  pg-exporter-slave2:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: pg-exporter-slave2
+    restart: always
+    environment:
+      # нацеливаемся на второго слейва
+      DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-slave2:5432/social_network_rep?sslmode=disable"
+    ports:
+      - "9189:9187"     # внешний 9189 → в контейнере 9187
+    depends_on:
+      - postgres-slave2
 
   # ------------------------
   # Prometheus
@@ -136,12 +163,29 @@ services:
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"
     depends_on:
       - prometheus
-
+  app:
+    build: .
+    container_name: social-network-app
+    depends_on:
+      - postgres-master
+      - postgres-slave1
+      - postgres-slave2
+    environment:
+      # Маршрутизируемые DataSource: master
+      SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://postgres-master:5432/social_network_rep
+      SPRING_DATASOURCE_MASTER_USERNAME: otus
+      SPRING_DATASOURCE_MASTER_PASSWORD: otus_pass
+      # slave (драйвер PostgreSQL умеет балансировать)
+      SPRING_DATASOURCE_SLAVE_URL: jdbc:postgresql://postgres-slave1:5432,postgres-slave2:5432/social_network_rep?targetServerType=slave&loadBalanceHosts=true
+      SPRING_DATASOURCE_SLAVE_USERNAME: otus
+      SPRING_DATASOURCE_SLAVE_PASSWORD: otus_pass
+    ports:
+      - "8080:8080"
 volumes:
   master_data:
   slave1_data:
