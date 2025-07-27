@@ -41,8 +41,9 @@ services:
     environment:
       POSTGRES_USER: otus
       POSTGRES_PASSWORD: otus_pass
-      # Чтобы pg_basebackup мог использоваться без запроса пароля:
+      POSTGRES_DB: social_network_rep
       PGPASSWORD: otus_pass
+      PGDATA: /var/lib/postgresql/data
     volumes:
       - slave1_data:/var/lib/postgresql/data
       - ./postgres/slave1/postgresql.conf:/etc/postgresql/postgresql.conf:ro
@@ -52,24 +53,31 @@ services:
       - bash
       - -c
       - |
-        set -e
-        # Если data-dir пуст — заполняем базу репликой
+        set -euo pipefail
+        
+        echo '⏳ Waiting for master to be ready…'
+        until pg_isready -h postgres-master -p 5432 -U otus -d social_network_rep; do
+          sleep 1
+        done
+        
         if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
-          pg_basebackup \
-            -h postgres-master \
-            -D /var/lib/postgresql/data \
-            -U otus \
-            -vP \
+          echo '🌀 Initializing replica via pg_basebackup…'
+          PGPASSWORD=otus_pass pg_basebackup \
+            --host=postgres-master \
+            --port=5432 \
+            --username=otus \
+            --pgdata=/var/lib/postgresql/data \
+            --verbose \
             --wal-method=stream
-          # Указываем мастера в конфиге
-          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" \
-            >> /etc/postgresql/postgresql.conf
-          # Создаём сигнал standby
+        
+          echo '✔️ Configuring standby…'
+          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" >> /var/lib/postgresql/data/postgresql.auto.conf
+
           touch /var/lib/postgresql/data/standby.signal
         fi
-        # Запускаем обычный Postgres
-        exec docker-entrypoint.sh postgres \
-          -c config_file=/etc/postgresql/postgresql.conf
+  
+        echo '🚀 Launching PostgreSQL…'
+        exec docker-entrypoint.sh postgres -c config_file=/etc/postgresql/postgresql.conf
 
   postgres-slave2:
     image: postgres:15
@@ -81,29 +89,42 @@ services:
       POSTGRES_USER: otus
       POSTGRES_PASSWORD: otus_pass
       PGPASSWORD: otus_pass
+      POSTGRES_DB: social_network_rep
+      PGDATA: /var/lib/postgresql/data
     volumes:
       - slave2_data:/var/lib/postgresql/data
-      - ./postgres/slave1/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/slave2/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     ports:
       - "5434:5432"
     entrypoint:
       - bash
       - -c
       - |
-        set -e
+        set -euo pipefail
+        
+        echo '⏳ Waiting for master to be ready…'
+        until pg_isready -h postgres-master -p 5432 -U otus -d social_network_rep; do
+          sleep 1
+        done
+        
         if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
-          pg_basebackup \
-            -h postgres-master \
-            -D /var/lib/postgresql/data \
-            -U otus \
-            -vP \
+          echo '🌀 Initializing replica via pg_basebackup…'
+          PGPASSWORD=otus_pass pg_basebackup \
+            --host=postgres-master \
+            --port=5432 \
+            --username=otus \
+            --pgdata=/var/lib/postgresql/data \
+            --verbose \
             --wal-method=stream
-          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" \
-            >> /etc/postgresql/postgresql.conf
+        
+          echo '✔️ Configuring standby…'
+          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" >> /var/lib/postgresql/data/postgresql.auto.conf
+
           touch /var/lib/postgresql/data/standby.signal
         fi
-        exec docker-entrypoint.sh postgres \
-          -c config_file=/etc/postgresql/postgresql.conf
+        
+        echo '🚀 Launching PostgreSQL…'
+        exec docker-entrypoint.sh postgres -c config_file=/etc/postgresql/postgresql.conf
 
   pg-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
