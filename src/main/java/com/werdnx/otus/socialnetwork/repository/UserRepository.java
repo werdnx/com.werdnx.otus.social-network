@@ -24,9 +24,14 @@ public class UserRepository {
     }
 
     public User findById(Long id) {
-        return jdbc.queryForObject(
-                "SELECT id, first_name, last_name, birth_date, gender, interests, city, password_hash FROM app_user WHERE id = ?",
-                new UserMapper(), id);
+        List<User> users = jdbc.query(
+                "SELECT id, first_name, last_name, birth_date, gender, interests, city, password_hash " +
+                        "FROM app_user WHERE id = ?",
+                new UserMapper(),
+                id
+        );
+        // если список пустой — возвращаем null, иначе первый элемент
+        return users.isEmpty() ? null : users.get(0);
     }
 
     public Long save(User user) {
