@@ -39,3 +39,22 @@ docker-compose exec db psql -U socialuser -d socialdb -c "
       city
     FROM tmp_people;
 "
+
+//init data for replica
+docker-compose exec postgres-master psql -U otus -d social_network_rep -c "
+  CREATE TEMP TABLE tmp_people(
+    fullname    text,
+    birth_date  date,
+    city        text
+  );
+  COPY tmp_people
+    FROM PROGRAM 'unzip -p /data/people.v2.zip'
+    WITH (FORMAT csv, HEADER false);
+  INSERT INTO app_user(first_name, last_name, birth_date, city)
+    SELECT
+      split_part(fullname,' ',2) AS first_name,
+      split_part(fullname,' ',1) AS last_name,
+      birth_date,
+      city
+    FROM tmp_people;
+"

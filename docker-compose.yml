@@ -5,7 +5,10 @@ services:
   # PostgreSQL Master
   # ------------------------
   postgres-master:
-    image: postgres:15
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    image: otus-social-db
     container_name: pg-master
     restart: always
     environment:
@@ -16,6 +19,7 @@ services:
       - master_data:/var/lib/postgresql/data
       - ./postgres/master/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - ./postgres/master/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./db/data:/data
     ports:
       - "5432:5432"
     command: >
