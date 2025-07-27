@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  db:
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    image: otus-social-db
+    environment:
+      POSTGRES_DB: socialdb
+      POSTGRES_USER: socialuser
+      POSTGRES_PASSWORD: socialpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/data:/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/socialdb
+      SPRING_DATASOURCE_USERNAME: socialuser
+      SPRING_DATASOURCE_PASSWORD: socialpass
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

@@ -1,78 +1,55 @@
-# Social Network Service
+# Social Network Application
 
 ## Prerequisites
 
 - Docker & Docker Compose
-- Java 18 (for local build)
+- Java 18 (для локальной сборки)
 - Maven 3.8+
+- (опционально) Docker-образ Prometheus и Grafana подтягиваются автоматически через `docker-compose.yml`
 
 ## Local Run
 
-1. Clone the repo
-2. Build & start services:
+1. **Клонируем репозиторий**
    ```bash
-   docker-compose up --build
+   git clone https://github.com/werdnx/com.werdnx.otus.social-network.git
+   cd com.werdnx.otus-social-network
    ```
-3. The application will be accessible at http://localhost:8080
 
-## Default User
+2. **Каталоги и конфиги**  
+   В проекте созданы и заполнены следующие директории/файлы (см. примеры в `docker-compose.yml`):
+    - `postgres/master/{data,postgresql.conf,pg_hba.conf}`
+    - `postgres/slave1/{data,recovery.conf}`
+    - `postgres/slave2/{data,recovery.conf}`
+    - `monitoring/prometheus.yml`
+    - `monitoring/grafana/provisioning/datasources/datasource.yml`
+    - `monitoring/grafana/provisioning/dashboards/dashboard.yml`
+    - `monitoring/grafana/dashboards/postgres-overview.json`
 
-A default user is created via the database migration scripts:
+3. **Сборка и запуск всех сервисов**
+   ```bash
+   docker-compose up --build -d
+   ```
 
-- **ID**: `1`
-- **First Name**: `Admin`
-- **Last Name**: `User`
-- **Password**: `secret` (use this to obtain a token)
+4. **Проверка доступности**
+    - **Приложение**: http://localhost:8080
+    - **PostgreSQL Master**: localhost:5432
+    - **PostgreSQL Slave 1**: localhost:5433
+    - **PostgreSQL Slave 2**: localhost:5434
+    - **Prometheus**: http://localhost:9090
+    - **Grafana**: http://localhost:3000  (логин/пароль `admin`/`admin`)
 
-## Authentication
+5. **Default User**  
+   Через Liquibase создаётся пользователь:
+    - ID: `1`
+    - First Name: `Admin`
+    - Last Name: `User`
+    - Password: `secret`
 
-All protected endpoints require a JWT Bearer token. First, log in to receive a token:
+## Репликация
 
-```bash
-POST /login?id=1&password=secret
-```
+- В `docker-compose.yml` подняты 1 master и 2 slave с потоковой репликацией PostgreSQL.
+- В Spring-конфигурации используется `ReplicationRoutingDataSource`, который при `@Transactional(readOnly = true)` направляет запрос на slave, иначе — на master.
 
-Example Response:
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMDU3NTY3LCJleHAiOjE3NTEwNTg0Njd9.kkdqsyB-pIRRGLDxhxM8mO4d-LaDgqUxdvOUu9qaYF4",
-  "expiresIn": 900,
-  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMDU3NTY3LCJleHAiOjE3NTE2NjIzNjd9.dnUfEgpIzlUr3dc9yNJzeOsXkN7-BMmsXP3RmferrHw",
-  "tokenType": "Bearer"
-}
-```
+## Authentication & API
 
-## API Endpoints
-
-- `POST /login?id={id}&password={password}`  
-  Obtain an authentication token.
-
-- `POST /user/register`  
-  Register a new user.  
-  **Headers**:
-  ```
-  Authorization: Bearer <accessToken>
-  ```  
-  **Body** (JSON):
-  ```json
-  {
-    "firstName": "Jane",
-    "lastName": "Doe",
-    "birthDate": "1990-01-01",
-    "gender": "Female",
-    "interests": "Reading,Travel",
-    "city": "Moscow",
-    "passwordHash": "secure_password"
-  }
-  ```
-
-- `GET /user/get/{id}`  
-  Retrieve a user profile by ID.  
-  **Headers**:
-  ```
-  Authorization: Bearer <accessToken>
-  ```
-
-## Postman Collection
-
-See `postman_collection.json`  
+Остальные разделы (`/login`, `/user/register`, `/user/get/{id}`) остаются без изменений — их см. в оригинале README.

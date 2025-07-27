@@ -1,8 +1,13 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/socialdb
-    username: socialuser
-    password: socialpass
+datasource:
+  master:
+    url: jdbc:postgresql://postgres-master:5432/social_network
+    username: otus
+    password: otus_pass
+  slave:
+    url: jdbc:postgresql://postgres-slave1:5432,postgres-slave2:5432/social_network?targetServerType=slave&loadBalanceHosts=true
+    username: otus
+    password: otus_pass
   jpa:
     hibernate:
       ddl-auto: none

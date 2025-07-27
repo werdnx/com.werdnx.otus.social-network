@@ -4,6 +4,7 @@ import com.werdnx.otus.socialnetwork.model.User;
 import com.werdnx.otus.socialnetwork.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +31,11 @@ public class UserService {
     /**
      * Поиск по префиксам имени и фамилии
      */
+    @Transactional(readOnly = true)
     public List<User> searchByNamePrefixes(String firstNamePrefix, String lastNamePrefix) {
         return repo.searchByNamePrefixes(firstNamePrefix, lastNamePrefix);
     }
+    @Transactional(readOnly = true)
     public User get(Long id) {
         return repo.findById(id);
     }
