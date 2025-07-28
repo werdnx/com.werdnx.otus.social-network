@@ -29,6 +29,34 @@
    ```bash
    docker-compose up --build -d
    ```
+3. **Запуск с кворумной синхронной репликацией**
+   ```bash
+   docker-compose -f docker-compose.yml -f docker-compose.sync.yml up -d
+   ```
+Между переключениями с асинхронной на синхронную репликаци вызывать:
+   ```bash
+docker-compose down -v
+   ```
+Для наполнения данными, несколько раз запустить скрипт(1 запуск 1млн записей), пароль otus_pass
+   ```bash
+docker-compose exec postgres-master psql -U otus -d social_network_rep -c "
+CREATE TEMP TABLE tmp_people(
+fullname    text,
+birth_date  date,
+city        text
+);
+COPY tmp_people
+FROM PROGRAM 'unzip -p /data/people.v2.zip'
+WITH (FORMAT csv, HEADER false);
+INSERT INTO app_user(first_name, last_name, birth_date, city)
+SELECT
+split_part(fullname,' ',2) AS first_name,
+split_part(fullname,' ',1) AS last_name,
+birth_date,
+city
+FROM tmp_people;
+"
+   ```
 
 4. **Проверка доступности**
     - **Приложение**: http://localhost:8080

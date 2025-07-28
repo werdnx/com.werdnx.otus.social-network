@@ -71,7 +71,7 @@ services:
             --wal-method=stream
         
           echo '✔️ Configuring standby…'
-          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" >> /var/lib/postgresql/data/postgresql.auto.conf
+          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass application_name=postgres-slave1'" >> /var/lib/postgresql/data/postgresql.auto.conf
 
           touch /var/lib/postgresql/data/standby.signal
         fi
@@ -118,7 +118,7 @@ services:
             --wal-method=stream
         
           echo '✔️ Configuring standby…'
-          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass'" >> /var/lib/postgresql/data/postgresql.auto.conf
+          echo "primary_conninfo = 'host=postgres-master port=5432 user=otus password=otus_pass application_name=postgres-slave2'" >> /var/lib/postgresql/data/postgresql.auto.conf
 
           touch /var/lib/postgresql/data/standby.signal
         fi

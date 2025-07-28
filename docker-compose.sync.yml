@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  postgres-master:
+    container_name: pg-master
+    command: >
+      postgres
+        -c config_file=/etc/postgresql/postgresql.conf
+        -c hba_file=/etc/postgresql/pg_hba.conf
+        -c synchronous_commit=remote_apply
+        -c synchronous_standby_names='1 ("postgres-slave1","postgres-slave2")'
+
