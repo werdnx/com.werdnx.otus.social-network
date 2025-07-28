@@ -25,7 +25,7 @@
     - `monitoring/grafana/provisioning/dashboards/dashboard.yml`
     - `monitoring/grafana/dashboards/postgres-overview.json`
 
-3. **Сборка и запуск всех сервисов**
+3. **Сборка и запуск всех сервисов с асинхронной репликацией(1 мастер, 2 слейва)**
    ```bash
    docker-compose up --build -d
    ```
@@ -76,8 +76,61 @@ FROM tmp_people;
 ## Репликация
 
 - В `docker-compose.yml` подняты 1 master и 2 slave с потоковой репликацией PostgreSQL.
+- В `docker-compose.sync.yml` подняты 1 master и 2 slave с синхронной репликацией PostgreSQL.
 - В Spring-конфигурации используется `ReplicationRoutingDataSource`, который при `@Transactional(readOnly = true)` направляет запрос на slave, иначе — на master.
 
-## Authentication & API
+## Authentication
 
-Остальные разделы (`/login`, `/user/register`, `/user/get/{id}`) остаются без изменений — их см. в оригинале README.
+All protected endpoints require a JWT Bearer token. First, log in to receive a token:
+
+```bash
+POST /login?id=1&password=secret
+```
+
+Example Response:
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMDU3NTY3LCJleHAiOjE3NTEwNTg0Njd9.kkdqsyB-pIRRGLDxhxM8mO4d-LaDgqUxdvOUu9qaYF4",
+  "expiresIn": 900,
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMDU3NTY3LCJleHAiOjE3NTE2NjIzNjd9.dnUfEgpIzlUr3dc9yNJzeOsXkN7-BMmsXP3RmferrHw",
+  "tokenType": "Bearer"
+}
+```
+
+## API Endpoints
+
+- `POST /login?id={id}&password={password}` - User authentication
+- `POST /user/register` - Register new user (JSON body)
+- `GET /user/get/{id}` - Retrieve user profile by ID
+- `POST /login?id={id}&password={password}`  
+  Obtain an authentication token.
+
+- `POST /user/register`  
+  Register a new user.  
+  **Headers**:
+  ```
+  Authorization: Bearer <accessToken>
+  ```  
+  **Body** (JSON):
+  ```json
+  {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "birthDate": "1990-01-01",
+    "gender": "Female",
+    "interests": "Reading,Travel",
+    "city": "Moscow",
+    "passwordHash": "secure_password"
+  }
+  ```
+
+- `GET /user/get/{id}`  
+  Retrieve a user profile by ID.  
+  **Headers**:
+  ```
+  Authorization: Bearer <accessToken>
+  ```
+
+## Postman Collection
+
+See `postman_collection.json`

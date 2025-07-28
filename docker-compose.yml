@@ -35,7 +35,7 @@ services:
   postgres-slave1:
     image: postgres:15
     container_name: pg-slave1
-    restart: always
+#    restart: always
     depends_on:
       - postgres-master
     environment:
@@ -82,7 +82,7 @@ services:
   postgres-slave2:
     image: postgres:15
     container_name: pg-slave2
-    restart: always
+#    restart: always
     depends_on:
       - postgres-master
     environment:
