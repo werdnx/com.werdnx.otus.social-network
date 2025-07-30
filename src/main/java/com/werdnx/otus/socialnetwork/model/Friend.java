@@ -1,0 +1,13 @@
+package com.werdnx.otus.socialnetwork.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Friend {
+    private Long userId;
+    private Long friendId;
+}

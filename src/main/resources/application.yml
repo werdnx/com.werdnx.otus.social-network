@@ -1,10 +1,17 @@
 # Общие (дефолтные) настройки, всегда загружаются
 spring:
+  profiles:
+    default: single
   jpa:
     hibernate:
       ddl-auto: none
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000, expireAfterWrite=5m
+
 
 server:
   port: 8080
