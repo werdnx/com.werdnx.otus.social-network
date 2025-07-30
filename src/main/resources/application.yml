@@ -1,22 +1,8 @@
+# Общие (дефолтные) настройки, всегда загружаются
 spring:
-  datasource:
-    master:
-      url: jdbc:postgresql://postgres-master:5432/social_network_rep
-      username: otus
-      password: otus_pass
-      driver-class-name: org.postgresql.Driver
-    slave:
-      url: >-
-        jdbc:postgresql://postgres-slave1:5432,postgres-slave2:5432/social_network_rep
-        ?targetServerType=slave&loadBalanceHosts=true
-      username: otus
-      password: otus_pass
-      driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: none
-
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
@@ -32,3 +18,40 @@ jwt:
   secret: verySecretKeyReallySecretISwearYou
   access-token-validity-seconds: 900    # 15 minutes
   refresh-token-validity-seconds: 604800  # 7 days
+
+#Single DB
+---
+spring:
+  config:
+    activate:
+      on-profile: single
+  datasource:
+    master:
+      url: jdbc:postgresql://localhost:5432/socialdb
+      username: socialuser
+      password: socialpass
+    slave:
+      url: jdbc:postgresql://localhost:5432/socialdb
+      username: socialuser
+      password: socialpass
+
+#Replication streaming or sync
+---
+spring:
+  config:
+    activate:
+      on-profile: multi
+  datasource:
+    master:
+      url: jdbc:postgresql://postgres-master:5432/social_network_rep
+      username: otus
+      password: otus_pass
+      driver-class-name: org.postgresql.Driver
+    slave:
+      url: >-
+        jdbc:postgresql://postgres-slave1:5432,postgres-slave2:5432/social_network_rep
+        ?targetServerType=slave&loadBalanceHosts=true
+      username: otus
+      password: otus_pass
+      driver-class-name: org.postgresql.Driver
+

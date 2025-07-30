@@ -25,13 +25,17 @@
     - `monitoring/grafana/provisioning/dashboards/dashboard.yml`
     - `monitoring/grafana/dashboards/postgres-overview.json`
 
-3. **Сборка и запуск всех сервисов с асинхронной репликацией(1 мастер, 2 слейва)**
+3. **Сборка и запуск всех сервисов с 1 ЮД**
    ```bash
    docker-compose up --build -d
    ```
-3. **Запуск с кворумной синхронной репликацией**
+3.1 **Сборка и запуск всех сервисов с асинхронной репликацией(1 мастер, 2 слейва)**
    ```bash
-   docker-compose -f docker-compose.yml -f docker-compose.sync.yml up -d
+   docker compose -f docker-compose-stream.yml up --build -d
+   ```   
+3.2 **Запуск с кворумной синхронной репликацией**
+   ```bash
+   docker-compose -f docker-compose-stream.yml -f docker-compose.sync.yml up -d
    ```
 Между переключениями с асинхронной на синхронную репликаци вызывать:
    ```bash
