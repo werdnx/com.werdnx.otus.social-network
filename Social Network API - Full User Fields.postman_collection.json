@@ -1,0 +1,205 @@
+{
+	"info": {
+		"_postman_id": "8b7e692d-634d-4565-ab37-b289b8f28234",
+		"name": "Social Network API - Full User Fields",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7895871"
+	},
+	"item": [
+		{
+			"name": "Dialog",
+			"item": [
+				{
+					"name": "Send Message",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMTAyNjcwLCJleHAiOjE3NTExMDM1NzB9.PT4_09AzQuU9xK0BLoHmH-WH41XgPM1IIOAErupCzX8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"peerId\": 2,\n  \"content\": \"Привет!\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/dialog/{{userId}}/send",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dialog",
+								"{{userId}}",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dialog",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU0MjUwNTI2LCJleHAiOjE3NTQyNTE0MjZ9.Avu9UzlJvkej9ZERCjOiEt_9BKLeHQnFqPNPRT9Ncgo",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/dialog/1/list?peerId=2&limit=20",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dialog",
+								"1",
+								"list"
+							],
+							"query": [
+								{
+									"key": "peerId",
+									"value": "2"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Register User",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMTAyNjcwLCJleHAiOjE3NTExMDM1NzB9.PT4_09AzQuU9xK0BLoHmH-WH41XgPM1IIOAErupCzX8",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"birthDate\": \"1990-01-01\",\n  \"gender\": \"MALE\",\n  \"interests\": \"Coding, Music\",\n  \"city\": \"Brussels\",\n  \"passwordHash\": \"secret\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/user/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login User",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/login?id=1&password=secret",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "1"
+						},
+						{
+							"key": "password",
+							"value": "secret"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Profile",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzUxMTAyNjcwLCJleHAiOjE3NTExMDM1NzB9.PT4_09AzQuU9xK0BLoHmH-WH41XgPM1IIOAErupCzX8",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/user/get/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"user",
+						"get",
+						"2"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

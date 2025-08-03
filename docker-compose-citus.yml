@@ -1,0 +1,67 @@
+version: '3.8'
+networks:
+  appnet:
+    driver: bridge
+services:
+  # Coordinator
+  coordinator:
+    image: citusdata/citus:11.2
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: coord
+      POSTGRES_PASSWORD: coord
+      POSTGRES_DB: socialdb_coord
+      CITUS_WORKERS: "worker1:5432,worker2:5432"
+    volumes:
+      - ./postgres/sharding/init-citus.sql:/docker-entrypoint-initdb.d/init-citus.sql
+      - ./postgres/sharding/init-workers.sql:/docker-entrypoint-initdb.d/init-workers.sql
+    networks:
+      - appnet
+
+  # Worker nodes
+  worker1:
+    image: citusdata/citus:11.2
+    environment:
+      POSTGRES_USER: worker1
+      POSTGRES_PASSWORD: worker1
+      POSTGRES_DB: worker1
+      COORDINATOR_HOST: coordinator
+    depends_on:
+      - coordinator
+    ports:
+      - "5433:5432"
+    networks:
+      - appnet
+  worker2:
+    image: citusdata/citus:11.2
+    environment:
+      POSTGRES_USER: worker2
+      POSTGRES_PASSWORD: worker2
+      POSTGRES_DB: worker2
+      COORDINATOR_HOST: coordinator
+    depends_on:
+      - coordinator
+    ports:
+      - "5434:5432"
+    networks:
+      - appnet
+  # Сервис приложения (автоматически выполняет Liquibase миграции при старте)
+  app:
+    build: .
+    container_name: social-app-sharded
+    depends_on:
+      - coordinator
+    environment:
+      SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://coordinator:5432/socialdb_coord
+      SPRING_DATASOURCE_MASTER_USERNAME: coord
+      SPRING_DATASOURCE_MASTER_PASSWORD: coord
+      SPRING_DATASOURCE_SLAVE_URL: jdbc:postgresql://coordinator:5432/socialdb_coord
+      SPRING_DATASOURCE_SLAVE_USERNAME: coord
+      SPRING_DATASOURCE_SLAVE_PASSWORD: coord
+      SPRING_PROFILES_ACTIVE: single
+    ports:
+      - "8080:8080"
+    networks:
+      - appnet
+    command: ["sh", "-c", "./wait-for-it.sh coordinator:5432 -- java -jar app.jar"]

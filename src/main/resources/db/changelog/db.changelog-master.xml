@@ -9,5 +9,6 @@
     <include file="db/changelog/changelog-1.xml"/>
     <include file="db/changelog/changelog-2-friends.xml"/>
     <include file="db/changelog/changelog-3-posts.xml"/>
-
+    <include file="db/changelog/changelog-4-dialog.xml"/>
+    <include file="db/changelog/changelog-5-shard_key.xml"/>
 </databaseChangeLog>

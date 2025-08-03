@@ -62,7 +62,7 @@ FROM tmp_people;
 "
    ```
 
-4. **Проверка доступности**
+3.3 **Проверка доступности**
     - **Приложение**: http://localhost:8080
     - **PostgreSQL Master**: localhost:5432
     - **PostgreSQL Slave 1**: localhost:5433
@@ -70,7 +70,7 @@ FROM tmp_people;
     - **Prometheus**: http://localhost:9090
     - **Grafana**: http://localhost:3000  (логин/пароль `admin`/`admin`)
 
-5. **Default User**  
+4 **Default User**  
    Через Liquibase создаётся пользователь:
     - ID: `1`
     - First Name: `Admin`
@@ -82,6 +82,53 @@ FROM tmp_people;
 - В `docker-compose.yml` подняты 1 master и 2 slave с потоковой репликацией PostgreSQL.
 - В `docker-compose.sync.yml` подняты 1 master и 2 slave с синхронной репликацией PostgreSQL.
 - В Spring-конфигурации используется `ReplicationRoutingDataSource`, который при `@Transactional(readOnly = true)` направляет запрос на slave, иначе — на master.
+
+## Шардирование
+   ```bash
+   docker-compose -f docker-compose-citus.yml up --build -d
+   ```
+
+Для обеспечения устойчивость к «эффекту Леди Гаги», шардируем по conversation_id.
+Даже если один пользователь активно переписывается с множеством собеседников, 
+каждый диалог будет иметь свой conversation_id и попадёт на разные шарды, что предотвращает концентрацию всех сообщений одного пользователя на одной ноде.
+### Решардинг (Online Rebalancing)
+
+Чтобы добавить воркер и перераспределить шарды без даунтайма:
+
+#### Добавьте нового воркера в `docker-compose-citus.yml` (например, `worker3`):
+   ```yaml
+   worker3:
+     image: citusdata/citus:11.2
+     environment:
+       POSTGRES_USER: worker3
+       POSTGRES_PASSWORD: worker3
+       POSTGRES_DB: worker3
+       COORDINATOR_HOST: coordinator
+     ports:
+       - "5435:5432"
+     networks:
+       - appnet
+  ```
+#### Запустите нового воркера:
+   ```bash
+docker-compose -f docker-compose-citus.yml up -d worker3
+   ```
+#### Подключитесь к координатору:
+   ```bash
+psql -h localhost -p 5432 -U coord -d coord
+   ```
+#### Запустите ребалансировку:
+   ```bash
+SELECT rebalance_table_shards('messages');
+   ```
+#### Мониторинг прогресса:
+   ```bash
+SELECT * FROM pg_dist_rebalancer_progress;
+   ```
+#### Проверить шарды:
+   ```bash
+SELECT * FROM citus_dist_shards WHERE logicalrelid = 'messages'::regclass;
+   ```
 
 ## Authentication
 

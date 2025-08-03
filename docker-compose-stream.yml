@@ -10,7 +10,7 @@ services:
       dockerfile: db/Dockerfile
     image: otus-social-db
     container_name: pg-master
-    restart: always
+ #   restart: always
     environment:
       POSTGRES_USER: otus
       POSTGRES_PASSWORD: otus_pass
@@ -129,7 +129,7 @@ services:
   pg-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: pg-exporter
-    restart: always
+#    restart: always
     environment:
       DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-master:5432/social_network_rep?sslmode=disable"
     ports:
@@ -140,7 +140,7 @@ services:
   pg-exporter-slave1:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: pg-exporter-slave1
-    restart: always
+ #   restart: always
     environment:
       # нацеливаемся на первого слейва
       DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-slave1:5432/social_network_rep?sslmode=disable"
@@ -152,7 +152,7 @@ services:
   pg-exporter-slave2:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: pg-exporter-slave2
-    restart: always
+#    restart: always
     environment:
       # нацеливаемся на второго слейва
       DATA_SOURCE_NAME: "postgresql://otus:otus_pass@postgres-slave2:5432/social_network_rep?sslmode=disable"
@@ -167,7 +167,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    restart: always
+#    restart: always
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
@@ -181,7 +181,7 @@ services:
   grafana:
     image: grafana/grafana:9.0.0
     container_name: grafana
-    restart: always
+ #   restart: always
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
