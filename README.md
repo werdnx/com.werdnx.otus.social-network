@@ -97,37 +97,53 @@ FROM tmp_people;
 
 #### Добавьте нового воркера в `docker-compose-citus.yml` (например, `worker3`):
    ```yaml
-   worker3:
-     image: citusdata/citus:11.2
-     environment:
-       POSTGRES_USER: worker3
-       POSTGRES_PASSWORD: worker3
-       POSTGRES_DB: worker3
-       COORDINATOR_HOST: coordinator
-     ports:
-       - "5435:5432"
-     networks:
-       - appnet
+
+worker3:
+  image: citusdata/citus:11.2
+  environment:
+    <<: *common-env
+    COORDINATOR_HOST: coordinator
+  volumes:
+    - ./postgres/sharding/init-workers.sql:/docker-entrypoint-initdb.d/init-workers.sql
+  ports:
+    - "5435:5432"
+  networks:
+    - appnet
+  command:
+    - postgres
+    - "-c"
+    - "wal_level=logical"
+    - "-c"
+    - "max_wal_senders=32"
+    - "-c"
+    - "max_replication_slots=32"
+    - "-c"
+    - "shared_preload_libraries=citus"
   ```
 #### Запустите нового воркера:
    ```bash
 docker-compose -f docker-compose-citus.yml up -d worker3
    ```
-#### Подключитесь к координатору:
+#### Подключитесь к координатору и выполните:
    ```bash
-psql -h localhost -p 5432 -U coord -d coord
+psql -h localhost -p 5435 -U coord -d coord
+SELECT master_add_node('worker3', 5432);
    ```
 #### Запустите ребалансировку:
    ```bash
 SELECT rebalance_table_shards('messages');
    ```
-#### Мониторинг прогресса:
-   ```bash
-SELECT * FROM pg_dist_rebalancer_progress;
-   ```
 #### Проверить шарды:
    ```bash
-SELECT * FROM citus_dist_shards WHERE logicalrelid = 'messages'::regclass;
+SELECT s.shardid,
+       p.nodename,
+       p.nodeport,
+       s.shardminvalue,         -- начало диапазона хеша
+       s.shardmaxvalue          -- конец диапазона
+FROM   pg_dist_shard            AS s
+JOIN   pg_dist_shard_placement  AS p USING (shardid)
+WHERE  s.logicalrelid = 'messages'::regclass
+ORDER  BY shardid;
    ```
 
 ## Authentication

@@ -2,56 +2,98 @@ version: '3.8'
 networks:
   appnet:
     driver: bridge
+
+x-common-env: &common-env
+  POSTGRES_USER: coord
+  POSTGRES_PASSWORD: coord
+  POSTGRES_DB: socialdb_coord
+
 services:
+  # Worker nodes
+  worker1:
+    image: citusdata/citus:11.2
+    environment:
+      <<: *common-env
+      COORDINATOR_HOST: coordinator
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres/sharding/init-workers.sql:/docker-entrypoint-initdb.d/init-workers.sql
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "socialdb_coord" ]
+      interval: 5s
+      retries: 20
+    networks:
+      - appnet
+    command:
+      - postgres
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=32"
+      - "-c"
+      - "max_replication_slots=32"
+      - "-c"
+      - "shared_preload_libraries=citus"
+
+  worker2:
+    image: citusdata/citus:11.2
+    environment:
+      <<: *common-env
+      COORDINATOR_HOST: coordinator
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "socialdb_coord" ]
+      interval: 5s
+      retries: 20
+    volumes:
+      - ./postgres/sharding/init-workers.sql:/docker-entrypoint-initdb.d/init-workers.sql
+    ports:
+      - "5434:5432"
+    networks:
+      - appnet
+    command:
+      - postgres
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=32"
+      - "-c"
+      - "max_replication_slots=32"
+      - "-c"
+      - "shared_preload_libraries=citus"
   # Coordinator
   coordinator:
     image: citusdata/citus:11.2
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: coord
-      POSTGRES_PASSWORD: coord
-      POSTGRES_DB: socialdb_coord
+      <<: *common-env
       CITUS_WORKERS: "worker1:5432,worker2:5432"
+      CITUS_NODE_NAME: coordinator
+      CITUS_COORDINATOR_HOST: coordinator
     volumes:
       - ./postgres/sharding/init-citus.sql:/docker-entrypoint-initdb.d/init-citus.sql
       - ./postgres/sharding/init-workers.sql:/docker-entrypoint-initdb.d/init-workers.sql
-    networks:
-      - appnet
-
-  # Worker nodes
-  worker1:
-    image: citusdata/citus:11.2
-    environment:
-      POSTGRES_USER: worker1
-      POSTGRES_PASSWORD: worker1
-      POSTGRES_DB: worker1
-      COORDINATOR_HOST: coordinator
     depends_on:
-      - coordinator
-    ports:
-      - "5433:5432"
+      worker1:
+        condition: service_healthy
+      worker2:
+        condition: service_healthy
     networks:
       - appnet
-  worker2:
-    image: citusdata/citus:11.2
-    environment:
-      POSTGRES_USER: worker2
-      POSTGRES_PASSWORD: worker2
-      POSTGRES_DB: worker2
-      COORDINATOR_HOST: coordinator
-    depends_on:
-      - coordinator
-    ports:
-      - "5434:5432"
-    networks:
-      - appnet
-  # Сервис приложения (автоматически выполняет Liquibase миграции при старте)
+    command:
+      - postgres
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=32"
+      - "-c"
+      - "max_replication_slots=32"
+      - "-c"
+      - "shared_preload_libraries=citus"
   app:
     build: .
     container_name: social-app-sharded
-    depends_on:
-      - coordinator
     environment:
       SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://coordinator:5432/socialdb_coord
       SPRING_DATASOURCE_MASTER_USERNAME: coord
@@ -62,6 +104,8 @@ services:
       SPRING_PROFILES_ACTIVE: single
     ports:
       - "8080:8080"
+    depends_on:
+      - coordinator
     networks:
       - appnet
     command: ["sh", "-c", "./wait-for-it.sh coordinator:5432 -- java -jar app.jar"]
