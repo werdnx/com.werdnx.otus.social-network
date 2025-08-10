@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/post/feed/posted").permitAll()
                         .requestMatchers("/login", "/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )

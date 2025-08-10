@@ -31,7 +31,6 @@ import static com.werdnx.otus.socialnetwork.amqp.AmqpConfig.EXCHANGE_FEED_EVENTS
 public class FeedWebSocketHandler implements WebSocketHandler {
 
     private final JwtTokenProvider jwt;
-    private final ObjectMapper om;
     private final RabbitAdmin admin;
     private final TopicExchange feedExchange;
     private final org.springframework.amqp.core.Queue wsQueue; // <- явно AMQP-очередь
@@ -45,7 +44,6 @@ public class FeedWebSocketHandler implements WebSocketHandler {
                                 org.springframework.amqp.core.Queue wsInstanceQueue, // <- явно AMQP-очередь
                                 ConnectionFactory cf) {
         this.jwt = jwt;
-        this.om = om;
         this.admin = admin;
         this.feedExchange = feedExchange;
         this.wsQueue = wsInstanceQueue;
@@ -70,7 +68,8 @@ public class FeedWebSocketHandler implements WebSocketHandler {
                         }
                     }
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         });
         c.start();
         this.container = c;
@@ -98,8 +97,11 @@ public class FeedWebSocketHandler implements WebSocketHandler {
         session.getAttributes().put("userId", userId);
     }
 
-    @Override public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) { /* server-push only */ }
-    @Override public void handleTransportError(WebSocketSession session, Throwable exception) { /* no-op */ }
+    @Override
+    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) { /* server-push only */ }
+
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) { /* no-op */ }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
@@ -120,7 +122,10 @@ public class FeedWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    @Override public boolean supportsPartialMessages() { return false; }
+    @Override
+    public boolean supportsPartialMessages() {
+        return false;
+    }
 
     private Long authenticate(WebSocketSession session) {
         try {

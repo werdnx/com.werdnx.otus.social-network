@@ -26,23 +26,6 @@
           }
         }
       },
-      {
-        "name": "WebSocket Subscribe Feed (/post/feed/posted)",
-        "protocolProfileBehavior": { "strictSSL": false },
-        "request": {
-          "method": "GET",
-          "header": [],
-          "url": {
-            "raw": "ws://localhost:8080/post/feed/posted?token={{access_token}}",
-            "host": ["localhost"],
-            "protocol": "ws",
-            "port": "8080",
-            "path": ["post", "feed", "posted"],
-            "query": [{ "key": "token", "value": "{{access_token}}" }]
-          }
-        },
-        "response": []
-      },
 		{
 			"name": "Dialog",
 			"item": [

@@ -1,5 +1,7 @@
 package com.werdnx.otus.socialnetwork.amqp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -13,13 +15,15 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 @Configuration
 @EnableRabbit
 public class AmqpConfig {
 
     public static final String EXCHANGE_FEED_EVENTS = "feed.events";
-    public static final String QUEUE_MATERIALIZE = "feed.materialize";
+    public static final String QUEUE_MATERIALIZE   = "feed.materialize";
     public static final String EXCHANGE_MATERIALIZE = "feed.materialize.exchange";
 
     @Bean
@@ -34,7 +38,7 @@ public class AmqpConfig {
 
     @Bean
     public org.springframework.amqp.core.Queue materializeQueue() {
-        // quorum queue для надёжности
+        // quorum очередь для надёжности
         return QueueBuilder.durable(QUEUE_MATERIALIZE)
                 .quorum()
                 .build();
@@ -48,12 +52,25 @@ public class AmqpConfig {
                 .with("fanout");
     }
 
+    /** ObjectMapper, знающий про JavaTime (Instant и т.д.) */
     @Bean
-    public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    @Primary
+    public ObjectMapper amqpObjectMapper(Jackson2ObjectMapperBuilder builder) {
+        ObjectMapper om = builder.build(); // Boot зарегистрирует JavaTimeModule
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // ISO-8601 вместо epoch millis
+        return om;
     }
 
+    /** Конвертер для AMQP, использующий наш ObjectMapper */
     @Bean
+    @Primary
+    public Jackson2JsonMessageConverter jackson2JsonMessageConverter(ObjectMapper amqpObjectMapper) {
+        return new Jackson2JsonMessageConverter(amqpObjectMapper);
+    }
+
+    /** RabbitTemplate, который ГАРАНТИРОВАННО использует наш конвертер */
+    @Bean
+    @Primary
     public RabbitTemplate rabbitTemplate(ConnectionFactory cf, Jackson2JsonMessageConverter conv) {
         RabbitTemplate rt = new RabbitTemplate(cf);
         rt.setMessageConverter(conv);
@@ -65,7 +82,7 @@ public class AmqpConfig {
         return new RabbitAdmin(cf);
     }
 
-    // Очередь для текущего инстанса WS-сервиса (биндим на user.<id> при подключении)
+    /** Очередь инстанса WS-сервиса; будем биндить под конкретных пользователей при подключении */
     @Bean
     public org.springframework.amqp.core.Queue wsInstanceQueue(
             @Value("${app.ws.instance-id:${random.uuid}}") String instanceId) {

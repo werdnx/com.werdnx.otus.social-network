@@ -58,3 +58,11 @@ docker-compose exec postgres-master psql -U otus -d social_network_rep -c "
       city
     FROM tmp_people;
 "
+
+docker run --rm -it \
+  --network "$COMPOSE_NET" \
+  -e TOKEN_B="$TOKEN_B" \
+  node:20-alpine sh -lc '
+    npm -g i wscat >/dev/null 2>&1 && \
+    wscat -c "ws://app:8080/post/feed/posted?token=$TOKEN_B"
+  '
