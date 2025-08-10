@@ -19,11 +19,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   app:
     build: .
     depends_on:
-      - db
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://db:5432/socialdb
       SPRING_DATASOURCE_MASTER_USERNAME: socialuser
@@ -32,6 +47,10 @@ services:
       SPRING_DATASOURCE_SLAVE_USERNAME: socialuser
       SPRING_DATASOURCE_SLAVE_PASSWORD: socialpass
       SPRING_PROFILES_ACTIVE: single
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: app
+      SPRING_RABBITMQ_PASSWORD: app
     ports:
       - "8080:8080"
 

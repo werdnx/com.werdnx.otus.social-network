@@ -70,4 +70,18 @@ public class PostRepository {
         args.add(limit);
         return jdbc.query(sql, rm, args.toArray());
     }
+    public Long insert(Long userId, String content, Instant createdAt){
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbc.update(con -> {
+            PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO post(user_id, content, created_at) VALUES (?,?,?)",
+                    new String[] {"id"});
+            ps.setLong(1, userId);
+            ps.setString(2, content);
+            ps.setTimestamp(3, Timestamp.from(createdAt));
+            return ps;
+        }, kh);
+        Number key = kh.getKey();
+        return key == null ? null : key.longValue();
+    }
 }

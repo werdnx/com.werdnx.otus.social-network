@@ -11,7 +11,16 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=10000, expireAfterWrite=5m
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
 
+app:
+  feed:
+    fanout-chunk-size: 500
 
 server:
   port: 8080

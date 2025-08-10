@@ -146,6 +146,23 @@ WHERE  s.logicalrelid = 'messages'::regclass
 ORDER  BY shardid;
    ```
 
+## Очереди и отложенное выполнение #2 // ДЗ
+
+### WebSocket + RabbitMQ
+
+- WebSocket сервер: `ws://localhost:8080/post/feed/posted?token=<JWT>`.
+- На подключении по `token` извлекается userId, и очередь инстанса биндится к exchange `feed.events` с ключом `user.<userId>`.
+- При создании поста REST `/post/create` отправляет задачу в `feed.materialize`. Обработчик делит подписчиков на чанки и публикует события в `feed.events` с ключом `user.<followerId>`.
+
+### Масштабирование WebSocket сервиса
+- Каждый инстанс объявляет свою durable-очередь `ws-feed-<instanceId>` и биндит её только на тех пользователей, которые подключены к этому инстансу. Благодаря этому достигается линейная масштабируемость.
+- Рекомендуется балансировщик со sticky-сессиями.
+
+### Масштабирование RabbitMQ
+- Exchange `feed.events` (topic, durable). Очередь задач `feed.materialize` — quorum queue.
+- Для HA — кластер RabbitMQ 3+ ноды, quorum queues для критичных очередей, publisher confirms включены.
+
+
 ## Authentication
 
 All protected endpoints require a JWT Bearer token. First, log in to receive a token:
