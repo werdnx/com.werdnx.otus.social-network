@@ -29,13 +29,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *   - authorId       (Long)   — ID автора A
  *   - subscriberId   (Long)   — ID подписчика B
  *   - password       (String) — пароль обоих пользователей, default: secret
- *
- * Пример запуска:
- *   mvn -Dtest=com.werdnx.otus.socialnetwork.e2e.RealtimeFeedTest \
- *       -DauthorId=1 -DsubscriberId=2 \
- *       -Dpassword=secret \
- *       -DbaseUrl=http://localhost:8080 -DwsUrl=ws://localhost:8080 \
- *       test
  */
 public class RealtimeFeedIT {
 

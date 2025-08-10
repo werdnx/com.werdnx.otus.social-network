@@ -152,7 +152,7 @@
                         </goals>
                         <configuration>
                             <!-- по умолчанию можно вообще отключить -->
-                            <skipITs>true</skipITs>
+                            <skipITs>false</skipITs>
                         </configuration>
                     </execution>
                 </executions>
