@@ -17,7 +17,11 @@ spring:
     username: ${SPRING_RABBITMQ_USERNAME:app}
     password: ${SPRING_RABBITMQ_PASSWORD:app}
     publisher-confirm-type: correlated
-
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000
 app:
   feed:
     fanout-chunk-size: 500

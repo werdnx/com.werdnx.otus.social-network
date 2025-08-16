@@ -3,7 +3,7 @@ package com.werdnx.otus.socialnetwork.service;
 import com.werdnx.otus.socialnetwork.dto.MessageResponse;
 import com.werdnx.otus.socialnetwork.dto.SendMessageRequest;
 import com.werdnx.otus.socialnetwork.model.MessageRecord;
-import com.werdnx.otus.socialnetwork.repository.MessageRepository;
+import com.werdnx.otus.socialnetwork.repository.MessageRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class DialogService {
-    private final MessageRepository messageDao;
+    private final MessageRedisRepository messageDao;
 
     public void sendMessage(Long userId, SendMessageRequest dto) {
         UUID conversationId = generateConversationId(userId, dto.peerId());
