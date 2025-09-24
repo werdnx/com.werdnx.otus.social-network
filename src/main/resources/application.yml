@@ -75,3 +75,5 @@ spring:
       password: otus_pass
       driver-class-name: org.postgresql.Driver
 
+dialog:
+  base-url: ${DIALOG_BASE_URL:http://localhost:8081}

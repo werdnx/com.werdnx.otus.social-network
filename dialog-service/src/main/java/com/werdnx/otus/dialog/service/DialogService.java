@@ -1,10 +1,11 @@
-package com.werdnx.otus.socialnetwork.service;
+package com.werdnx.otus.dialog.service;
 
-import com.werdnx.otus.socialnetwork.dto.MessageResponse;
-import com.werdnx.otus.socialnetwork.dto.SendMessageRequest;
-import com.werdnx.otus.socialnetwork.model.MessageRecord;
-import com.werdnx.otus.socialnetwork.repository.MessageRedisRepository;
+import com.werdnx.otus.dialog.dto.MessageResponse;
+import com.werdnx.otus.dialog.dto.SendMessageRequest;
+import com.werdnx.otus.dialog.model.MessageRecord;
+import com.werdnx.otus.dialog.repository.MessageRedisRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DialogService {
@@ -28,6 +30,7 @@ public class DialogService {
                 Instant.now()
         );
         messageDao.save(record);
+        log.info("record {} saved", record);
     }
 
     public List<MessageResponse> getDialog(Long userId, Long peerId, int limit) {

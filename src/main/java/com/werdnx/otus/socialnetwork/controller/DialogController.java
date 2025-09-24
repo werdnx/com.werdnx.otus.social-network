@@ -1,26 +1,31 @@
 package com.werdnx.otus.socialnetwork.controller;
 
+import com.werdnx.otus.socialnetwork.client.DialogClient;
 import com.werdnx.otus.socialnetwork.dto.MessageResponse;
 import com.werdnx.otus.socialnetwork.dto.SendMessageRequest;
-import com.werdnx.otus.socialnetwork.service.DialogService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
+@Deprecated
 @RestController
 @RequestMapping("/dialog/{userId}")
 @RequiredArgsConstructor
 public class DialogController {
-    private final DialogService service;
+    private final DialogClient dialogClient;
 
     @PostMapping("/send")
     public ResponseEntity<Void> send(
             @PathVariable Long userId,
-            @RequestBody SendMessageRequest dto
+            @RequestBody SendMessageRequest dto,
+            @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
-        service.sendMessage(userId, dto);
+        dialogClient.sendV2(userId, dto, authorization);
+        log.info("message {} saved", dto);
         return ResponseEntity.ok().build();
     }
 
@@ -28,8 +33,9 @@ public class DialogController {
     public List<MessageResponse> list(
             @PathVariable Long userId,
             @RequestParam Long peerId,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
-        return service.getDialog(userId, peerId, limit);
+        return dialogClient.listV2(userId, peerId, limit, authorization);
     }
 }

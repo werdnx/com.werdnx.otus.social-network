@@ -73,11 +73,30 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: app
       SPRING_RABBITMQ_PASSWORD: app
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      DIALOG_BASE_URL: http://dialog-service:8081
     ports:
       - "8080:8080"
     networks:
       - appnet
+
+  dialog-service:
+    build:
+      context: ./dialog-service
+    image: otus-dialog-service
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: single
+      JWT_SECRET: verySecretKeyReallySecretISwearYou
+      JWT_ISSUER: social-network
+      JWT_ACCESS_TOKEN_VALIDITY_SECONDS: 900
+      JWT_REFRESH_TOKEN_VALIDITY_SECONDS: 2592000
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    networks:
+      - appnet
+
 volumes:
   pgdata:

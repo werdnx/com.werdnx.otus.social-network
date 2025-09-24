@@ -1,8 +1,8 @@
-package com.werdnx.otus.socialnetwork.repository;
+package com.werdnx.otus.dialog.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.werdnx.otus.socialnetwork.model.MessageRecord;
+import com.werdnx.otus.dialog.model.MessageRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

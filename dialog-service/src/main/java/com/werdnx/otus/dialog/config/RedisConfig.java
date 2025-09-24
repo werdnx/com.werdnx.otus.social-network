@@ -1,4 +1,4 @@
-package com.werdnx.otus.socialnetwork.config;
+package com.werdnx.otus.dialog.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
