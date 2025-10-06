@@ -1,0 +1,293 @@
+version: '3.8'
+
+networks:
+  appnet:
+    driver: bridge
+
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+
+x-common-env: &pg-env
+  POSTGRES_USER: otus
+  POSTGRES_PASSWORD: otus_pass
+  POSTGRES_DB: social_network_rep
+
+services:
+  # ------------------------
+  # PostgreSQL Master
+  # ------------------------
+  postgres-master:
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    image: otus-social-db
+    container_name: pg-master
+    environment:
+      <<: *pg-env
+    volumes:
+      - master_data:/var/lib/postgresql/data
+      - ./postgres/master/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/master/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./db/data:/data
+    command: >
+      postgres
+        -c config_file=/etc/postgresql/postgresql.conf
+        -c hba_file=/etc/postgresql/pg_hba.conf
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    ports:
+      - "5432:5432"
+    networks: [appnet]
+
+  # ------------------------
+  # PostgreSQL Slave #1
+  # ------------------------
+  postgres-slave1:
+    user: postgres
+    image: otus-social-db
+    container_name: pg-slave1
+    environment:
+      <<: *pg-env
+    volumes:
+      - slave1_data:/var/lib/postgresql/data
+      - ./postgres/slave1/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    command: >
+      bash -lc '
+        set -euo pipefail;
+        echo "⏳ Waiting for master to be ready…";
+        until pg_isready -h postgres-master -p 5432 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"; do
+          sleep 1;
+        done;
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          echo "🌀 Initializing replica via pg_basebackup…";
+          PGPASSWORD="$$POSTGRES_PASSWORD" pg_basebackup
+            --host=postgres-master
+            --port=5432
+            --username="$$POSTGRES_USER"
+            --pgdata=/var/lib/postgresql/data
+            --wal-method=stream
+            --write-recovery-conf
+            --verbose;
+          echo "primary_conninfo = \"host=postgres-master port=5432 user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD application_name=postgres-slave1\"" >> /var/lib/postgresql/data/postgresql.auto.conf;
+          touch /var/lib/postgresql/data/standby.signal;
+        fi;
+        exec /usr/lib/postgresql/15/bin/postgres -c config_file=/etc/postgresql/postgresql.conf
+      '
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [appnet]
+
+  # ------------------------
+  # PostgreSQL Slave #2
+  # ------------------------
+  postgres-slave2:
+    user: postgres
+    image: otus-social-db
+    container_name: pg-slave2
+    environment:
+      <<: *pg-env
+    volumes:
+      - slave2_data:/var/lib/postgresql/data
+      - ./postgres/slave2/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    command: >
+      bash -lc '
+        set -euo pipefail;
+        echo "⏳ Waiting for master to be ready…";
+        until pg_isready -h postgres-master -p 5432 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"; do
+          sleep 1;
+        done;
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          echo "🌀 Initializing replica via pg_basebackup…";
+          PGPASSWORD="$$POSTGRES_PASSWORD" pg_basebackup
+            --host=postgres-master
+            --port=5432
+            --username="$$POSTGRES_USER"
+            --pgdata=/var/lib/postgresql/data
+            --wal-method=stream
+            --write-recovery-conf
+            --verbose;
+          echo "primary_conninfo = \"host=postgres-master port=5432 user=$$POSTGRES_USER password=$$POSTGRES_PASSWORD application_name=postgres-slave2\"" >> /var/lib/postgresql/data/postgresql.auto.conf;
+          touch /var/lib/postgresql/data/standby.signal;
+        fi;
+        exec /usr/lib/postgresql/15/bin/postgres -c config_file=/etc/postgresql/postgresql.conf
+      '
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [appnet]
+
+  # ------------------------
+  # HAProxy for read-only pool (slaves)
+  # ------------------------
+  pg-haproxy:
+    image: haproxy:2.8
+    container_name: pg-haproxy
+    depends_on:
+      - postgres-slave1
+      - postgres-slave2
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "5433:5433"   # PostgreSQL read-only via HAProxy
+      - "8404:8404"   # HAProxy stats
+    networks: [appnet]
+
+  # ------------------------
+  # RabbitMQ & Redis (from docker-compose.yml)
+  # ------------------------
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks: [appnet]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks: [appnet]
+
+  # ------------------------
+  # Dialog Service (8081) from docker-compose.yml
+  # ------------------------
+  dialog-service:
+    build:
+      context: ./dialog-service
+      dockerfile: Dockerfile
+    image: otus-dialog-service
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: verySecretKeyReallySecretISwearYou
+      JWT_ISSUER: social-network
+      JWT_ACCESS_TOKEN_VALIDITY_SECONDS: 900
+      JWT_REFRESH_TOKEN_VALIDITY_SECONDS: 2592000
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    networks: [appnet]
+
+  # ------------------------
+  # Two instances of the main app balanced by Nginx
+  # ------------------------
+  app1:
+    build: *app-build
+    image: otus-social-app
+    environment:
+      DIALOG_BASE_URL: http://dialog-service:8081
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: multi
+      SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://postgres-master:5432/social_network_rep
+      SPRING_DATASOURCE_MASTER_USERNAME: otus
+      SPRING_DATASOURCE_MASTER_PASSWORD: otus_pass
+      SPRING_DATASOURCE_SLAVE_URL: jdbc:postgresql://pg-haproxy:5433/social_network_rep?targetServerType=slave
+      SPRING_DATASOURCE_SLAVE_USERNAME: otus
+      SPRING_DATASOURCE_SLAVE_PASSWORD: otus_pass
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      postgres-slave1:
+        condition: service_healthy
+      postgres-slave2:
+        condition: service_healthy
+      pg-haproxy:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      dialog-service:
+        condition: service_started
+    expose:
+      - "8080"
+    networks: [appnet]
+
+  app2:
+    image: otus-social-app
+    environment:
+      DIALOG_BASE_URL: http://dialog-service:8081
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: multi
+      SPRING_DATASOURCE_MASTER_URL: jdbc:postgresql://postgres-master:5432/social_network_rep
+      SPRING_DATASOURCE_MASTER_USERNAME: otus
+      SPRING_DATASOURCE_MASTER_PASSWORD: otus_pass
+      SPRING_DATASOURCE_SLAVE_URL: jdbc:postgresql://pg-haproxy:5433/social_network_rep?targetServerType=slave
+      SPRING_DATASOURCE_SLAVE_USERNAME: otus
+      SPRING_DATASOURCE_SLAVE_PASSWORD: otus_pass
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+      postgres-slave1:
+        condition: service_healthy
+      postgres-slave2:
+        condition: service_healthy
+      pg-haproxy:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      dialog-service:
+        condition: service_started
+    expose:
+      - "8080"
+    networks: [appnet]
+
+  # ------------------------
+  # Nginx balancer for app1/app2
+  # ------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
+    depends_on:
+      - app1
+      - app2
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks: [appnet]
+
+volumes:
+  master_data:
+  slave1_data:
+  slave2_data:
